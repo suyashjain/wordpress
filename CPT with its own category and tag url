@@ -6,7 +6,7 @@ Also I am adding category and tag support for this CPT.
 
 The CPT will be public, searchable, will have archive page, feed page etc.
 
-
+<code>
     add_action( 'init', 'create_post_type' );
     
     function create_post_type() {
@@ -32,7 +32,7 @@ The CPT will be public, searchable, will have archive page, feed page etc.
       register_post_type( 'command',$post_args);
     
     }
-
+</code>
 Now I am declaring rewrite rule to have the separate URL facility for CPT category and tag.
 
 
