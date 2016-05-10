@@ -1,0 +1,115 @@
+First, we need to declare CPT. 
+
+Here in example I am creating with the name "**command**". 
+
+Also I am adding category and tag support for this CPT. 
+
+The CPT will be public, searchable, will have archive page, feed page etc.
+
+
+    add_action( 'init', 'create_post_type' );
+    
+    function create_post_type() {
+    	
+    	$post_array	=	array(
+            'name'				=> __( 'Command' ),
+            'singular_name' 	=> __( 'command' )
+    
+          );
+    	$post_args = array(
+    		'labels' 				=> $post_array,
+    		'menu_name'         	=> __( 'Command' ),
+    		'taxonomies' 			=> array('category','post_tag'),
+    		'public' 				=> true,
+    		'has_archive' 			=> true,
+    		'rewrite' 				=> array('slug' => 'command'),
+    		'publicly_queryable'	=> true,
+    		'exclude_from_scratch'	=>false,
+    		'with_front'			=> true,
+    		'feeds'					=> true,
+    		'supports'      		=> array( 'title','editor', 'author', 'thumbnail', 'excerpt', 'comments','revisions' ),
+        );
+      register_post_type( 'command',$post_args);
+    
+    }
+
+Now I am declaring rewrite rule to have the separate URL facility for CPT category and tag.
+
+
+    http://domain.net/command/category/catname
+    http://domain.net/command/tag/tagname
+
+will be converted to the following URLS which are understandable by wordpress.
+
+    http://domain.net/?page_type=command&category_name=catname
+    http://domain.net/?page_type=command&tag=tagname
+
+So that wordpress could understand them.
+
+    add_action('init', 'category_cpt_rewrites');
+    
+    function category_cpt_rewrites() {
+        $custom_post_types = array('command'); //some example post types
+        foreach ( $custom_post_types as $post_type ) {
+            $rule = '^' . $post_type . '/category/(.+?)/?$';
+            $rewrite = 'index.php?post_type=' . $post_type . '&category_name=$matches[1]';
+            add_rewrite_rule($rule,$rewrite,'top');
+        }
+    	    foreach ( $custom_post_types as $post_type ) {
+            $rule = '^' . $post_type . '/tag/(.+?)/?$';
+            $rewrite = 'index.php?post_type=' . $post_type . '&tag=$matches[1]';
+            add_rewrite_rule($rule,$rewrite,'top');
+        }
+    
+    	
+    }
+
+We will also rewrite for date based archive pages like this.
+
+    http://example.net/command/2016/05
+
+will be converted to
+
+    http://example.net/?post_type=command&m=201605
+
+the code is as followed.
+
+    add_action('init', 'date_cpt_rewrites');
+    
+    function date_cpt_rewrites() {
+        $custom_post_types = array('command'); //some example post types
+        foreach ( $custom_post_types as $post_type ) {
+            $rule = '^' . $post_type . '/(\d+)/(\d+)/?$';
+            $rewrite = 'index.php?post_type=' . $post_type . '&m=$matches[1]$matches[2]';
+            add_rewrite_rule($rule,$rewrite,'top');
+        }
+    
+    
+    }
+
+Here we are making sure that our CPT "**command**" posts are available in other common archive also. 
+By default post type "post" is only shown on archive pages.
+
+    add_filter( 'pre_get_posts', 'my_get_posts' );
+    
+    function my_get_posts( $query ) {
+    
+    	if ( is_category() || is_tag() || is_search() || is_home() || is_front_page() || is_author() || is_archive() && $query->is_main_query() )
+    				$post_type = get_query_var('post_type');
+    				if($post_type) {
+    					$post_type = $post_type;
+    				}else{
+    					$post_type = array('post','command'); // replace cpt to your custom post type
+    					$query->set( 'post_type', $post_type );
+    				}
+    	return $query;
+    }
+
+
+So Here entire game is converting your desired URLS into wordpress understandable urls.
+
+
+
+
+
+
